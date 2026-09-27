@@ -18,6 +18,7 @@ El proyecto está enfocado en aplicar conceptos de backend utilizados en aplicac
 ## Contenido
 
 - [Sobre el proyecto](#sobre-el-proyecto)
+- [Capturas de pantalla](#capturas-de-pantalla)
 - [Funcionalidades](#funcionalidades)
 - [Stack tecnológico](#stack-tecnológico)
 - [Arquitectura](#arquitectura)
@@ -28,7 +29,6 @@ El proyecto está enfocado en aplicar conceptos de backend utilizados en aplicac
 - [Documentación de la API](#documentación-de-la-api)
 - [Testing y calidad](#testing-y-calidad)
 - [Instalación](#instalación)
-- [Datos iniciales](#datos-iniciales)
 - [Cómo probar StockCore](#cómo-probar-stockcore)
 - [Autor](#autor)
 
@@ -62,6 +62,21 @@ La creación de una orden integra clientes, productos, usuarios, inventario y mo
 manteniendo la consistencia de los datos incluso cuando una operación no puede completarse.
 
 El objetivo del proyecto es demostrar el desarrollo de una **API REST profesional con Laravel**, aplicando diseño de APIs, relaciones con Eloquent, validación, autenticación y autorización, reglas de negocio, consistencia transaccional, control de concurrencia, integridad de datos con PostgreSQL y pruebas automatizadas.
+
+---
+
+## Capturas de pantalla
+
+### Documentación interactiva de la API
+StockCore cuenta con documentación interactiva basada en **OpenAPI 3.1 y Swagger UI**, que permite explorar los endpoints disponibles, consultar sus esquemas y probar las operaciones de la API directamente desde el navegador.
+
+<p align="center">
+  <img
+    src="docs/images/swagger-ui.png"
+    alt="Documentación de StockCore con Swagger UI"
+    width="900"
+  >
+</p>
 
 ---
 
@@ -116,17 +131,17 @@ Protección de los recursos y operaciones disponibles en la API:
 
 ## Stack tecnológico
 
-| Área                    | Tecnología                |
-| ----------------------- | ------------------------- |
-| Backend                 | PHP 8.3+ · Laravel 13     |
-| Base de datos           | PostgreSQL                |
-| Autenticación           | Laravel Sanctum           |
-| Roles y permisos        | Spatie Laravel Permission |
-| Testing                 | PHPUnit                   |
-| Calidad de código       | Laravel Pint              |
-| Documentación API       | Fern · Postman            |
-| Gestión de dependencias | Composer                  |
-| Control de versiones    | Git · GitHub              |
+| Área                    | Tecnología                          |
+| ----------------------- | ----------------------------------- |
+| Backend                 | PHP 8.3+ · Laravel 13               |
+| Base de datos           | PostgreSQL                          |
+| Autenticación           | Laravel Sanctum                     |
+| Roles y permisos        | Spatie Laravel Permission           |
+| Testing                 | PHPUnit                             |
+| Calidad de código       | Laravel Pint                        |
+| Documentación API       | OpenAPI 3.1 · Swagger UI · Postman  |
+| Gestión de dependencias | Composer                            |
+| Control de versiones    | Git · GitHub                        |
 
 ---
 
@@ -351,26 +366,140 @@ La base de datos refuerza reglas críticas independientemente de las validacione
 
 ## Documentación de la API
 
+StockCore cuenta con una especificación formal de la API basada en **OpenAPI 3.1**, disponible en:
+
+```text
+docs/openapi.yaml
+```
+
+La especificación documenta los endpoints disponibles, métodos HTTP, parámetros, cuerpos de las solicitudes, respuestas, esquemas de datos y autenticación.
+
+El proyecto integra **Swagger UI** para explorar y probar la API de forma interactiva desde el navegador:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+Desde Swagger UI es posible iniciar sesión, utilizar el token generado por Laravel Sanctum mediante **Bearer Authentication** y ejecutar directamente los endpoints protegidos.
+
 La API está versionada bajo el prefijo:
 
 ```text
 /api/v1
 ```
 
-La documentación interactiva permite consultar los endpoints disponibles, parámetros, cuerpos de las solicitudes y respuestas de la API.
-
-📚 [Consultar documentación interactiva de StockCore](https://stockcore-api.docs.buildwithfern.com)
-
-También se incluye una colección de **Postman** preparada para importar y probar los endpoints de la API.
+También se incluye una colección de **Postman** preparada para importar y probar los endpoints de la API:
 
 📦 [Descargar colección de Postman](docs/StockCoreAPI.postman_collection.json)
 
-Los endpoints protegidos requieren autenticación mediante un token generado al iniciar sesión con Laravel Sanctum:
+Los endpoints protegidos utilizan el siguiente esquema de autenticación:
 
 ```http
 Authorization: Bearer <token>
 Accept: application/json
 ```
+
+También se encuentra disponible una versión publicada de la documentación:
+
+📚 [Consultar documentación pública de StockCore](https://stockcore-api.docs.buildwithfern.com)
+
+---
+
+## Testing y calidad
+
+StockCore cuenta con pruebas automatizadas para verificar el comportamiento de los principales módulos de la API, incluyendo autenticación, autorización, catálogo, inventario, movimientos de stock, clientes y órdenes.
+
+La suite utiliza **PHPUnit** junto con las herramientas de testing de Laravel y actualmente cuenta con:
+
+```text
+57 tests
+509 assertions
+```
+Las pruebas utilizan una base de datos `PostgreSQL` independiente (stockcore_testing) y `RefreshDatabase` para mantener un entorno aislado y reproducible durante cada ejecución.
+El proyecto utiliza además Laravel Pint para mantener un estilo de código consistente
+
+---
+
+## Instalación
+
+### Requisitos
+
+- PHP 8.3+
+- Composer
+- PostgreSQL
+- Git
+
+### Configuración
+
+Clona el repositorio e instala las dependencias:
+
+```bash
+git clone https://github.com/josecarlosonate/StockCore.git
+cd StockCore
+composer install
+```
+
+Crea el archivo de entorno y genera la clave de la aplicación:
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+Configura la conexión a PostgreSQL en `.env` y ejecuta las migraciones junto con los datos iniciales:
+
+```bash
+php artisan migrate --seed
+```
+
+Inicia el servidor de desarrollo:
+
+```bash
+php artisan serve
+```
+
+La API estará disponible bajo:
+
+```text
+http://127.0.0.1:8000/api/v1
+```
+
+La documentación interactiva con Swagger UI está disponible en:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+---
+
+## Cómo probar StockCore
+
+Después de ejecutar las migraciones y seeders, StockCore incluye tres usuarios de prueba con diferentes niveles de acceso:
+
+| Rol           | Email                      | Contraseña    |
+| ------------- | -------------------------- | ------------- |
+| Admin         | admin@stockcore.test       | password123   |
+| Seller        | seller@stockcore.test      | password123   |
+| Warehouse     | warehouse@stockcore.test   | password123   |
+
+La API puede probarse desde **Swagger UI** accediendo a:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+Un flujo recomendado para comprobar las principales reglas de negocio es:
+
+1. Iniciar sesión como `warehouse@stockcore.test`.
+2. Registrar una entrada de stock para uno de los productos.
+3. Verificar que el inventario refleje las nuevas existencias.
+4. Iniciar sesión como `seller@stockcore.test`.
+5. Crear una orden utilizando un producto con stock disponible.
+6. Consultar la orden creada.
+7. Verificar que el inventario haya disminuido.
+8. Consultar los movimientos de stock y comprobar la salida generada por la venta.
+
+Este flujo permite comprobar la autenticación, autorización por roles, movimientos de inventario, creación de órdenes y actualización transaccional del stock.
 
 ---
 
