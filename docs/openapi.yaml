@@ -1,0 +1,1015 @@
+openapi: 3.1.0
+
+info:
+  title: StockCore API
+  version: 1.0.0
+  description: REST API for inventory and sales management built with Laravel.
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development server
+
+tags:
+  - name: Authentication
+    description: User authentication and access-token management.
+  - name: Products
+    description: Product catalog operations.
+  - name: Categories
+    description: Product category management and category-product queries.
+  - name: Suppliers
+    description: Supplier management operations.
+  - name: Product Suppliers
+    description: Management of supplier associations and supplier-specific product data.
+  - name: Inventory
+    description: Inventory queries and stock-threshold management.
+  - name: Stock Movements
+    description: Inventory entries, exits, adjustments, and movement history.
+  - name: Customers
+    description: Customer management operations.
+  - name: Orders
+    description: Sales order creation and order queries.
+
+paths:
+  /login:
+    post:
+      tags: [Authentication]
+      summary: Authenticate user
+      operationId: login
+      security: []
+      description: Authenticates a user and returns a Laravel Sanctum access token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: User authenticated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /logout:
+    post:
+      tags: [Authentication]
+      summary: Logout user
+      operationId: logout
+      description: Revokes the current Laravel Sanctum access token.
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: User logged out successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/MessageResponse"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+
+  /products:
+    get:
+      tags: [Products]
+      summary: List products
+      operationId: listProducts
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: Products retrieved successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/PaginatedProducts"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+    post:
+      tags: [Products]
+      summary: Create product
+      operationId: createProduct
+      description: Creates a product and initializes its inventory with zero units.
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateProductRequest"}
+      responses:
+        "201":
+          description: Product created successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Product"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "422": {$ref: "#/components/responses/ValidationError"}
+
+  /products/{product}:
+    parameters:
+      - {$ref: "#/components/parameters/ProductId"}
+    get:
+      tags: [Products]
+      summary: Get product
+      operationId: getProduct
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: Product retrieved successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Product"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    patch:
+      tags: [Products]
+      summary: Update product
+      operationId: updateProduct
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/UpdateProductRequest"}
+      responses:
+        "200":
+          description: Product updated successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Product"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/ValidationError"}
+
+  /categories:
+    get:
+      tags: [Categories]
+      summary: List categories
+      operationId: listCategories
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: Categories retrieved successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CategoryCollection"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+    post:
+      tags: [Categories]
+      summary: Create category
+      operationId: createCategory
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateCategoryRequest"}
+      responses:
+        "201":
+          description: Category created successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Category"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "422": {$ref: "#/components/responses/ValidationError"}
+
+  /categories/{category}:
+    parameters:
+      - {$ref: "#/components/parameters/CategoryId"}
+    get:
+      tags: [Categories]
+      summary: Get category
+      operationId: getCategory
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: Category retrieved successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Category"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    patch:
+      tags: [Categories]
+      summary: Update category
+      operationId: updateCategory
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/UpdateCategoryRequest"}
+      responses:
+        "200":
+          description: Category updated successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Category"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/ValidationError"}
+
+  /categories/{category}/products:
+    parameters:
+      - {$ref: "#/components/parameters/CategoryId"}
+    get:
+      tags: [Categories]
+      summary: List products by category
+      operationId: listCategoryProducts
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: Products retrieved successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/PaginatedProducts"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+
+  /suppliers:
+    get:
+      tags: [Suppliers]
+      summary: List suppliers
+      operationId: listSuppliers
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: Suppliers retrieved successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/PaginatedSuppliers"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+    post:
+      tags: [Suppliers]
+      summary: Create supplier
+      operationId: createSupplier
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateSupplierRequest"}
+      responses:
+        "201":
+          description: Supplier created successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Supplier"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "422": {$ref: "#/components/responses/ValidationError"}
+
+  /suppliers/{supplier}:
+    parameters:
+      - {$ref: "#/components/parameters/SupplierId"}
+    get:
+      tags: [Suppliers]
+      summary: Get supplier
+      operationId: getSupplier
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: Supplier retrieved successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Supplier"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    patch:
+      tags: [Suppliers]
+      summary: Update supplier
+      operationId: updateSupplier
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/UpdateSupplierRequest"}
+      responses:
+        "200":
+          description: Supplier updated successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Supplier"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/ValidationError"}
+
+  /products/{product}/suppliers:
+    parameters:
+      - {$ref: "#/components/parameters/ProductId"}
+    get:
+      tags: [Product Suppliers]
+      summary: List product suppliers
+      operationId: listProductSuppliers
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: Product suppliers retrieved successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ProductSupplierCollection"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    post:
+      tags: [Product Suppliers]
+      summary: Attach supplier to product
+      operationId: attachProductSupplier
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateProductSupplierRequest"}
+      responses:
+        "201":
+          description: Supplier associated successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ProductSupplier"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/ValidationError"}
+
+  /products/{product}/suppliers/{supplier}:
+    parameters:
+      - {$ref: "#/components/parameters/ProductId"}
+      - {$ref: "#/components/parameters/SupplierId"}
+    patch:
+      tags: [Product Suppliers]
+      summary: Update product-supplier association
+      operationId: updateProductSupplier
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/UpdateProductSupplierRequest"}
+      responses:
+        "200":
+          description: Association updated successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ProductSupplier"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/ValidationError"}
+    delete:
+      tags: [Product Suppliers]
+      summary: Detach supplier from product
+      operationId: detachProductSupplier
+      security: [{bearerAuth: []}]
+      responses:
+        "204":
+          description: Supplier detached successfully.
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+
+  /inventories:
+    get:
+      tags: [Inventory]
+      summary: List inventories
+      operationId: listInventories
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: Inventories retrieved successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/PaginatedInventories"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+
+  /products/{product}/inventory:
+    parameters:
+      - {$ref: "#/components/parameters/ProductId"}
+    get:
+      tags: [Inventory]
+      summary: Get product inventory
+      operationId: getProductInventory
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: Inventory retrieved successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Inventory"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    patch:
+      tags: [Inventory]
+      summary: Update inventory thresholds
+      operationId: updateProductInventory
+      description: Updates min_stock and/or max_stock. Quantity is changed through stock movements.
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/UpdateInventoryRequest"}
+      responses:
+        "200":
+          description: Inventory updated successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Inventory"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/ValidationError"}
+
+  /products/{product}/stock-movements:
+    parameters:
+      - {$ref: "#/components/parameters/ProductId"}
+    get:
+      tags: [Stock Movements]
+      summary: List product stock movements
+      operationId: listProductStockMovements
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: Stock movements retrieved successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/PaginatedStockMovements"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    post:
+      tags: [Stock Movements]
+      summary: Create stock movement
+      operationId: createStockMovement
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateStockMovementRequest"}
+      responses:
+        "201":
+          description: Stock movement created successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/StockMovement"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/ValidationError"}
+
+  /stock-movements:
+    get:
+      tags: [Stock Movements]
+      summary: List stock movements
+      operationId: listStockMovements
+      security: [{bearerAuth: []}]
+      parameters:
+        - name: type
+          in: query
+          schema: {$ref: "#/components/schemas/StockMovementType"}
+        - name: product_id
+          in: query
+          schema: {type: integer, minimum: 1}
+      responses:
+        "200":
+          description: Stock movements retrieved successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/PaginatedStockMovements"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "422": {$ref: "#/components/responses/ValidationError"}
+
+  /customers:
+    get:
+      tags: [Customers]
+      summary: List customers
+      operationId: listCustomers
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: Customers retrieved successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/PaginatedCustomers"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+    post:
+      tags: [Customers]
+      summary: Create customer
+      operationId: createCustomer
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateCustomerRequest"}
+      responses:
+        "201":
+          description: Customer created successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Customer"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "422": {$ref: "#/components/responses/ValidationError"}
+
+  /customers/{customer}:
+    parameters:
+      - {$ref: "#/components/parameters/CustomerId"}
+    get:
+      tags: [Customers]
+      summary: Get customer
+      operationId: getCustomer
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: Customer retrieved successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Customer"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    patch:
+      tags: [Customers]
+      summary: Update customer
+      operationId: updateCustomer
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/UpdateCustomerRequest"}
+      responses:
+        "200":
+          description: Customer updated successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Customer"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/ValidationError"}
+
+  /orders:
+    get:
+      tags: [Orders]
+      summary: List orders
+      operationId: listOrders
+      security: [{bearerAuth: []}]
+      parameters:
+        - name: customer_id
+          in: query
+          schema: {type: integer, minimum: 1}
+        - name: user_id
+          in: query
+          schema: {type: integer, minimum: 1}
+        - name: order_id
+          in: query
+          schema: {type: integer, minimum: 1}
+      responses:
+        "200":
+          description: Orders retrieved successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/PaginatedOrders"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "422": {$ref: "#/components/responses/ValidationError"}
+    post:
+      tags: [Orders]
+      summary: Create order
+      operationId: createOrder
+      description: Creates a sale and generates the corresponding inventory exits.
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CreateOrderRequest"}
+      responses:
+        "201":
+          description: Order created successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Order"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "422": {$ref: "#/components/responses/ValidationError"}
+
+  /orders/{order}:
+    parameters:
+      - {$ref: "#/components/parameters/OrderId"}
+    get:
+      tags: [Orders]
+      summary: Get order
+      operationId: getOrder
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: Order retrieved successfully.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Order"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer}
+
+  parameters:
+    ProductId: {name: product, in: path, required: true, schema: {type: integer, minimum: 1}}
+    CategoryId: {name: category, in: path, required: true, schema: {type: integer, minimum: 1}}
+    SupplierId: {name: supplier, in: path, required: true, schema: {type: integer, minimum: 1}}
+    CustomerId: {name: customer, in: path, required: true, schema: {type: integer, minimum: 1}}
+    OrderId: {name: order, in: path, required: true, schema: {type: integer, minimum: 1}}
+
+  responses:
+    Unauthorized:
+      description: Authentication failed or is required.
+      content: {application/json: {schema: {$ref: "#/components/schemas/Error"}}}
+    Forbidden:
+      description: The authenticated user does not have permission to perform this action.
+      content: {application/json: {schema: {$ref: "#/components/schemas/Error"}}}
+    NotFound:
+      description: The requested resource was not found.
+      content: {application/json: {schema: {$ref: "#/components/schemas/Error"}}}
+    ValidationError:
+      description: The request contains invalid data.
+      content: {application/json: {schema: {$ref: "#/components/schemas/ValidationError"}}}
+
+  schemas:
+    Error:
+      type: object
+      properties: {message: {type: string}}
+      required: [message]
+    MessageResponse:
+      type: object
+      properties: {message: {type: string}}
+      required: [message]
+    ValidationError:
+      type: object
+      properties:
+        message: {type: string}
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: {type: string}
+      required: [message, errors]
+    LoginRequest:
+      type: object
+      properties:
+        email: {type: string, format: email}
+        password: {type: string, format: password}
+      required: [email, password]
+    AuthUser:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        email: {type: string, format: email}
+      required: [id, name, email]
+    LoginResponse:
+      type: object
+      properties:
+        user: {$ref: "#/components/schemas/AuthUser"}
+        token: {type: string}
+      required: [user, token]
+
+    Category:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        slug: {type: string}
+        description: {type: [string, "null"]}
+        is_active: {type: boolean}
+      required: [id, name, slug, description, is_active]
+    CategoryCollection:
+      type: object
+      properties:
+        data: {type: array, items: {$ref: "#/components/schemas/Category"}}
+      required: [data]
+    CreateCategoryRequest:
+      type: object
+      properties:
+        name: {type: string, maxLength: 255}
+        description: {type: [string, "null"]}
+        is_active: {type: boolean}
+      required: [name, is_active]
+    UpdateCategoryRequest:
+      type: object
+      minProperties: 1
+      properties:
+        name: {type: string, maxLength: 255}
+        description: {type: [string, "null"]}
+        is_active: {type: boolean}
+
+    Product:
+      type: object
+      properties:
+        id: {type: integer}
+        sku: {type: string}
+        name: {type: string}
+        slug: {type: string}
+        description: {type: [string, "null"]}
+        price: {type: string, pattern: '^\d+(\.\d{2})$', example: "129900.00"}
+        is_active: {type: boolean}
+        categories: {type: array, items: {$ref: "#/components/schemas/Category"}}
+      required: [id, sku, name, slug, description, price, is_active, categories]
+    CreateProductRequest:
+      type: object
+      properties:
+        name: {type: string, maxLength: 255}
+        description: {type: [string, "null"]}
+        price: {type: number, minimum: 0, maximum: 100000000, multipleOf: 0.01}
+        is_active: {type: boolean}
+        categories: {type: array, minItems: 1, uniqueItems: true, items: {type: integer}}
+      required: [name, price, is_active, categories]
+    UpdateProductRequest:
+      type: object
+      minProperties: 1
+      properties:
+        name: {type: string, maxLength: 255}
+        description: {type: [string, "null"]}
+        price: {type: number, minimum: 0, maximum: 100000000, multipleOf: 0.01}
+        is_active: {type: boolean}
+        categories: {type: array, minItems: 1, uniqueItems: true, items: {type: integer}}
+
+    Supplier:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        tax_id: {type: [string, "null"]}
+        email: {type: [string, "null"], format: email}
+        phone: {type: [string, "null"]}
+        address: {type: [string, "null"]}
+        is_active: {type: boolean}
+      required: [id, name, tax_id, email, phone, address, is_active]
+    CreateSupplierRequest:
+      type: object
+      properties:
+        name: {type: string, maxLength: 255}
+        tax_id: {type: [string, "null"], maxLength: 255}
+        email: {type: [string, "null"], format: email, maxLength: 255}
+        phone: {type: [string, "null"], maxLength: 255}
+        address: {type: [string, "null"]}
+        is_active: {type: boolean}
+      required: [name, is_active]
+    UpdateSupplierRequest:
+      type: object
+      minProperties: 1
+      properties:
+        name: {type: string, maxLength: 255}
+        tax_id: {type: [string, "null"], maxLength: 255}
+        email: {type: [string, "null"], format: email, maxLength: 255}
+        phone: {type: [string, "null"], maxLength: 255}
+        address: {type: [string, "null"]}
+        is_active: {type: boolean}
+
+    ProductSupplier:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        supplier_sku: {type: [string, "null"]}
+        cost: {type: string}
+      required: [id, name, supplier_sku, cost]
+    ProductSupplierCollection:
+      type: object
+      properties:
+        data: {type: array, items: {$ref: "#/components/schemas/ProductSupplier"}}
+      required: [data]
+    CreateProductSupplierRequest:
+      type: object
+      properties:
+        supplier_id: {type: integer, minimum: 1}
+        supplier_sku: {type: [string, "null"], maxLength: 255}
+        cost: {type: number, minimum: 0, maximum: 100000000}
+      required: [supplier_id, cost]
+    UpdateProductSupplierRequest:
+      type: object
+      minProperties: 1
+      properties:
+        supplier_sku: {type: [string, "null"], maxLength: 255}
+        cost: {type: number, minimum: 0, maximum: 100000000}
+
+    Inventory:
+      type: object
+      properties:
+        id: {type: integer}
+        quantity: {type: integer, minimum: 0}
+        min_stock: {type: [integer, "null"], minimum: 0}
+        max_stock: {type: [integer, "null"], minimum: 0}
+        product: {$ref: "#/components/schemas/Product"}
+      required: [id, quantity, min_stock, max_stock, product]
+    UpdateInventoryRequest:
+      type: object
+      minProperties: 1
+      properties:
+        min_stock: {type: [integer, "null"], minimum: 0}
+        max_stock: {type: [integer, "null"], minimum: 0}
+      description: When both values are non-null, min_stock must be less than or equal to max_stock.
+
+    StockMovementType: {type: string, enum: [entry, exit, adjustment]}
+    CreateStockMovementRequest:
+      type: object
+      properties:
+        type: {$ref: "#/components/schemas/StockMovementType"}
+        quantity: {type: integer, minimum: 0}
+        reason: {type: [string, "null"], maxLength: 1000}
+      required: [type, quantity]
+      description: Quantity must be at least 1 for entry/exit; adjustment accepts 0 or greater. Reason is required for adjustment.
+    UserSummary:
+      type: object
+      properties: {id: {type: integer}, name: {type: string}}
+      required: [id, name]
+    StockMovementProduct:
+      type: object
+      properties:
+        id: {type: integer}
+        sku: {type: string}
+        name: {type: string}
+        price: {type: string}
+        is_active: {type: boolean}
+      required: [id, sku, name, price, is_active]
+    StockMovement:
+      type: object
+      properties:
+        id: {type: integer}
+        type: {$ref: "#/components/schemas/StockMovementType"}
+        quantity: {type: integer}
+        quantity_before: {type: integer}
+        quantity_after: {type: integer}
+        reason: {type: [string, "null"]}
+        created_at: {type: string, format: date-time}
+        user: {$ref: "#/components/schemas/UserSummary"}
+        product: {$ref: "#/components/schemas/StockMovementProduct"}
+      required: [id, type, quantity, quantity_before, quantity_after, reason, created_at, user, product]
+
+    CustomerDocumentType: {type: string, enum: [CC, CE, NIT, PASSPORT, DNI]}
+    Customer:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        document_type:
+          anyOf:
+            - {$ref: "#/components/schemas/CustomerDocumentType"}
+            - {type: "null"}
+        document_number: {type: [string, "null"]}
+        email: {type: [string, "null"], format: email}
+        phone: {type: [string, "null"]}
+        address: {type: [string, "null"]}
+        is_active: {type: boolean}
+        created_at: {type: string, format: date-time}
+      required: [id, name, document_type, document_number, email, phone, address, is_active, created_at]
+    CreateCustomerRequest:
+      type: object
+      properties:
+        name: {type: string, maxLength: 255}
+        document_type:
+          anyOf:
+            - {$ref: "#/components/schemas/CustomerDocumentType"}
+            - {type: "null"}
+        document_number: {type: [string, "null"], maxLength: 50}
+        email: {type: [string, "null"], format: email, maxLength: 255}
+        phone: {type: [string, "null"], maxLength: 30}
+        address: {type: [string, "null"], maxLength: 255}
+        is_active: {type: boolean}
+      required: [name]
+      description: document_type and document_number must be provided together.
+    UpdateCustomerRequest:
+      type: object
+      minProperties: 1
+      properties:
+        name: {type: string, maxLength: 255}
+        document_type:
+          anyOf:
+            - {$ref: "#/components/schemas/CustomerDocumentType"}
+            - {type: "null"}
+        document_number: {type: [string, "null"], maxLength: 50}
+        email: {type: [string, "null"], format: email, maxLength: 255}
+        phone: {type: [string, "null"], maxLength: 30}
+        address: {type: [string, "null"], maxLength: 255}
+        is_active: {type: boolean}
+
+    OrderProductSummary:
+      type: object
+      properties: {id: {type: integer}, name: {type: string}, sku: {type: string}}
+      required: [id, name, sku]
+    OrderItem:
+      type: object
+      properties:
+        id: {type: integer}
+        quantity: {type: integer}
+        unit_price: {oneOf: [{type: string}, {type: number}]}
+        subtotal: {oneOf: [{type: string}, {type: number}]}
+        product: {$ref: "#/components/schemas/OrderProductSummary"}
+      required: [id, quantity, unit_price, subtotal, product]
+    Order:
+      type: object
+      properties:
+        id: {type: integer}
+        total: {oneOf: [{type: string}, {type: number}]}
+        user: {$ref: "#/components/schemas/UserSummary"}
+        customer:
+          anyOf:
+            - {$ref: "#/components/schemas/Customer"}
+            - {type: "null"}
+        items: {type: array, items: {$ref: "#/components/schemas/OrderItem"}}
+      required: [id, total, user, customer, items]
+    CreateOrderItemRequest:
+      type: object
+      properties:
+        product_id: {type: integer, minimum: 1}
+        quantity: {type: integer, minimum: 1}
+      required: [product_id, quantity]
+    CreateOrderRequest:
+      type: object
+      properties:
+        customer_id: {type: [integer, "null"], minimum: 1}
+        items:
+          type: array
+          minItems: 1
+          items: {$ref: "#/components/schemas/CreateOrderItemRequest"}
+      required: [items]
+      description: Product IDs in items must be distinct.
+
+    PaginationLinks:
+      type: object
+      properties:
+        first: {type: [string, "null"]}
+        last: {type: [string, "null"]}
+        prev: {type: [string, "null"]}
+        next: {type: [string, "null"]}
+      required: [first, last, prev, next]
+    PaginationMetaLink:
+      type: object
+      properties:
+        url: {type: [string, "null"]}
+        label: {type: string}
+        page: {type: [integer, "null"]}
+        active: {type: boolean}
+      required: [url, label, active]
+    PaginationMeta:
+      type: object
+      properties:
+        current_page: {type: integer}
+        from: {type: [integer, "null"]}
+        last_page: {type: integer}
+        links: {type: array, items: {$ref: "#/components/schemas/PaginationMetaLink"}}
+        path: {type: string}
+        per_page: {type: integer}
+        to: {type: [integer, "null"]}
+        total: {type: integer}
+      required: [current_page, from, last_page, links, path, per_page, to, total]
+    PaginatedBase:
+      type: object
+      properties:
+        links: {$ref: "#/components/schemas/PaginationLinks"}
+        meta: {$ref: "#/components/schemas/PaginationMeta"}
+      required: [links, meta]
+    PaginatedProducts:
+      allOf:
+        - {$ref: "#/components/schemas/PaginatedBase"}
+        - {type: object, properties: {data: {type: array, items: {$ref: "#/components/schemas/Product"}}}, required: [data]}
+    PaginatedSuppliers:
+      allOf:
+        - {$ref: "#/components/schemas/PaginatedBase"}
+        - {type: object, properties: {data: {type: array, items: {$ref: "#/components/schemas/Supplier"}}}, required: [data]}
+    PaginatedInventories:
+      allOf:
+        - {$ref: "#/components/schemas/PaginatedBase"}
+        - {type: object, properties: {data: {type: array, items: {$ref: "#/components/schemas/Inventory"}}}, required: [data]}
+    PaginatedStockMovements:
+      allOf:
+        - {$ref: "#/components/schemas/PaginatedBase"}
+        - {type: object, properties: {data: {type: array, items: {$ref: "#/components/schemas/StockMovement"}}}, required: [data]}
+    PaginatedCustomers:
+      allOf:
+        - {$ref: "#/components/schemas/PaginatedBase"}
+        - {type: object, properties: {data: {type: array, items: {$ref: "#/components/schemas/Customer"}}}, required: [data]}
+    PaginatedOrders:
+      allOf:
+        - {$ref: "#/components/schemas/PaginatedBase"}
+        - {type: object, properties: {data: {type: array, items: {$ref: "#/components/schemas/Order"}}}, required: [data]}
