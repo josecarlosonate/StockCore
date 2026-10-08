@@ -47,7 +47,7 @@
                 </p>
 
                 <div class="mt-8 flex flex-wrap gap-3">
-                    <a href="https://stockcore-api.docs.buildwithfern.com"
+                    <a href="https://api.josecarlosonate.com/stock-core-api/introduction"
                         class="rounded-md bg-stockcore-green px-5 py-3 font-medium text-stockcore-dark transition hover:opacity-90">
                         API Documentation
                     </a>
