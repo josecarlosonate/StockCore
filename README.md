@@ -401,7 +401,7 @@ Accept: application/json
 
 También se encuentra disponible una versión publicada de la documentación:
 
-📚 [Consultar documentación pública de StockCore](https://stockcore-api.docs.buildwithfern.com)
+📚 [Consultar documentación pública de StockCore](https://api.josecarlosonate.com/stock-core-api/introduction)
 
 ---
 
